@@ -10,10 +10,11 @@ Note = namedtuple('Note', ['onset', 'offset', 'index'])
 
 index_to_note = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
 
-note_to_index = { n: i for i, n in enumerate(index_to_note) }
-for flat in [('Bb', 1), ('Db', 4), ('Eb', 6), ('Gb', 9), ('Ab', 11)]:
-    note_to_index[flat[0]] = flat[1]
-
+def note_to_index(note):
+    note_dict = { n: i for i, n in enumerate(index_to_note) }
+    for flat in [('Bb', 1), ('Db', 4), ('Eb', 6), ('Gb', 9), ('Ab', 11)]:
+        note_dict[flat[0]] = flat[1]
+    return note_dict[note[:-1]] + 12 * int(note[-1])
 
 def r_int(num): return int(round(num))
 def f_int(num): return int(math.floor(num))
@@ -69,8 +70,11 @@ def onset_seq(notes):
 def seq_to_string(seq):
     return ''.join(seq)
 
-if __name__ == '__main__':
-    notes = read_midi('song.mid')
+def plot_piano_roll(notes):
     roll = piano_roll(notes, 0.05)
     plt.imshow(roll)
     plt.show()
+
+if __name__ == '__main__':
+    notes = read_midi('song.mid')
+    plot_piano_roll(notes)
