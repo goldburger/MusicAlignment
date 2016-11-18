@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+import re
 
 from mido import MidiFile, tempo2bpm
 from operator import itemgetter
@@ -11,6 +12,8 @@ Note = namedtuple('Note', ['onset', 'offset', 'index'])
 index_to_note = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
 
 def note_to_index(note):
+    note = re.sub('\-', '', note)
+
     note_dict = { n: i for i, n in enumerate(index_to_note) }
     for flat in [('Bb', 1), ('Db', 4), ('Eb', 6), ('Gb', 9), ('Ab', 11)]:
         note_dict[flat[0]] = flat[1]
@@ -68,13 +71,29 @@ def onset_seq(notes):
     return seq
 
 def seq_to_string(seq):
-    return ''.join(seq)
+    output, current_line = '', ''
+    for note in seq:
+        if len(current_line) + len(note) < 80:
+            current_line += note
+        else:
+            output += current_line + '\n'
+            current_line = note
+    if len(current_line) not in [2, 3]:
+        output += current_line
+    return output
+
 
 def plot_piano_roll(notes):
     roll = piano_roll(notes, 0.05)
     plt.imshow(roll)
     plt.show()
 
+def output_fasta(seq, name, filename):
+    with open(filename, 'w') as f:
+        f.write('>{0}\n{1}'.format(name, seq_to_string(seq)))
+
 if __name__ == '__main__':
-    notes = read_midi('song.mid')
-    plot_piano_roll(notes)
+    notes = read_midi('data/midi/williams01.mid')
+    output_fasta(onset_seq(notes), 'hedwig', 'hedwig.fasta')
+    #plot_piano_roll(notes)
+    #print(string_seq(notes))

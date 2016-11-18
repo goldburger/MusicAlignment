@@ -1,0 +1,12 @@
+beautifulsoup4==4.5.1
+bs4==0.0.1
+cycler==0.10.0
+Cython==0.25.1
+matplotlib==1.5.3
+mido==1.1.18
+numpy==1.11.2
+pyparsing==2.1.10
+python-dateutil==2.6.0
+pytz==2016.7
+pyzmq==16.0.1
+six==1.10.0
