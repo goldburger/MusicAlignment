@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+import re
 
 from mido import MidiFile, tempo2bpm
 from operator import itemgetter
@@ -11,6 +12,8 @@ Note = namedtuple('Note', ['onset', 'offset', 'index'])
 index_to_note = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
 
 def note_to_index(note):
+    note = re.sub('\-', '', note)
+
     note_dict = { n: i for i, n in enumerate(index_to_note) }
     for flat in [('Bb', 1), ('Db', 4), ('Eb', 6), ('Gb', 9), ('Ab', 11)]:
         note_dict[flat[0]] = flat[1]
@@ -76,5 +79,6 @@ def plot_piano_roll(notes):
     plt.show()
 
 if __name__ == '__main__':
-    notes = read_midi('song.mid')
+    notes = read_midi('data/midi/williams01.mid')
     plot_piano_roll(notes)
+    #print(string_seq(notes))
