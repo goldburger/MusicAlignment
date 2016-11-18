@@ -7,10 +7,8 @@ mididatabase = 'http://www.markheadrick.com/'
 req = urllib.request.urlopen(mididatabase + 'midi.php')
 soup = BeautifulSoup(req, 'html.parser', parseOnlyThese=SoupStrainer('a'))
 
-count = 0
 for link in soup:
     if link.has_attr('href') and link['href'][-4:] == '.mid':
-        print(count)
         time.sleep(0.1)
 
         midi_req = urllib.request.urlopen(mididatabase + link['href'])
@@ -18,5 +16,3 @@ for link in soup:
 
         with open('data/midi/{0}'.format(filename), 'wb') as f:
             f.write(midi_req.read())
-
-        count += 1
