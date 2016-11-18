@@ -29,6 +29,7 @@ public class MusicAlign {
   public static Trace[][] vTrace, hTrace, simTrace;
   public static HashMap<Character, Integer> charMapping;
   public static String x, y;
+  public static String xComment, yComment;
   public static int gapPenaltyA, gapPenaltyB;
   public static int minVal;
   
@@ -56,34 +57,31 @@ public class MusicAlign {
     }
   }
   
-  // Sets X and Y to be pair of strings to be aligned
-  // Assumes FASTA file input with only two strings in file
-  // First line must be a comment line; strings are separated by a line starting with '>'
-  public static void readStrings(String filename) {
+  // Sets sequence to be a string read from filename
+  // Assumes FASTA file input with only one string in file
+  // First line must be a comment line opening with '>'
+  // Returns a string array where first entry is sequence, second is comment
+  public static String[] readString(String filename) {
     File file = new File(filename);
     if (!file.exists() || file.isDirectory()) {
       System.out.println(filename + ": file not found");
       System.exit(1);
     }
     Scanner s = null;
+    String[] seqPair = new String[2];
     try {
       s = new Scanner(file);
-      s.nextLine();
-      x = "";
-      String next = s.nextLine();
-      while (next.charAt(0) != '>') {
-        x += next;
-        next = s.nextLine();
-      }
-      y = s.nextLine();
-      while (s.hasNextLine()) {
-        y += s.nextLine();
-      }
+      seqPair[1] = s.nextLine().substring(1);
+      seqPair[0] = "";
+      do
+        seqPair[0] += s.nextLine();
+      while (s.hasNextLine());
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     } finally {
       s.close();
     }
+    return seqPair;
   }
   
   // First line of file should be space-separated list of characters in alphabet
@@ -119,20 +117,28 @@ public class MusicAlign {
   // Currently costs A + (k-1)B for gap of k
   // This differs from the Gotoh algorithm! Change to other convention?
   public static void main(String [] args) {
-    if (args.length != 4) {
+    if (args.length != 5) {
       String usage = "";
-      usage += "Usage: java MusicAlign <input> <sub> <A> <B>";
-      usage += " input: FASTA file containing two strings to align";
+      usage += "Usage: java MusicAlign <inputX> <inputY> <sub> <A> <B>";
+      usage += " inputX: file containing first string to align";
+      usage += " inputY: file containing second string to align";
       usage += " sub: file containing substitution matrix for alphabet used in input file";
       usage += " A: integer cost for starting term of affine gap penalty";
       usage += " B: integer cost for extending term of affine gap penalty";
       System.out.println(usage);
       System.exit(1);
     }
-    readStrings(args[0]);
-    readSubMatrix(args[1]);
-    gapPenaltyA = Integer.parseInt(args[2]);
-    gapPenaltyB = Integer.parseInt(args[3]);
+
+    String[] pair = readString(args[0]);
+    x = pair[0];
+    xComment = pair[1];
+    pair = readString(args[1]);
+    y = pair[0];
+    yComment = pair[1];
+
+    readSubMatrix(args[2]);
+    gapPenaltyA = Integer.parseInt(args[3]);
+    gapPenaltyB = Integer.parseInt(args[4]);
     minVal = Integer.MIN_VALUE + gapPenaltyA + gapPenaltyB + 1;
 
     int m = x.length();
