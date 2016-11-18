@@ -4,11 +4,7 @@ import numpy as np
 from data import *
 
 def write_substitution_matrix(filename, S):
-    notes = []
-    for octave in range(8):
-        for note in index_to_note:
-            notes.append('{0}{1}'.format(note, octave))
-    notes = notes[:-8]
+    notes = all_notes()
 
     with open(filename, 'w') as f:
         f.write('\t' + '\t'.join(notes) + '\n')

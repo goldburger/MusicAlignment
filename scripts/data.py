@@ -9,7 +9,10 @@ from collections import namedtuple
 
 Note = namedtuple('Note', ['onset', 'offset', 'index'])
 
-index_to_note = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
+index_to_note = [
+    'C', 'C#', 'D', 'D#', 'E', 'F',
+    'F#', 'G', 'G#', 'A', 'A#', 'B'
+]
 
 def note_to_index(note):
     note = re.sub('\-', '', note)
@@ -17,13 +20,20 @@ def note_to_index(note):
     note_dict = { n: i for i, n in enumerate(index_to_note) }
     for flat in [('Bb', 1), ('Db', 4), ('Eb', 6), ('Gb', 9), ('Ab', 11)]:
         note_dict[flat[0]] = flat[1]
-    return note_dict[note[:-1]] + 12 * int(note[-1])
+    return note_dict[note[:-1]] + 12 * int(note[-1]) - 9
+
+def all_notes():
+    notes = []
+    for octave in range(9):
+        for note in index_to_note:
+            notes.append('{0}{1}'.format(note, octave))
+    return notes[9:-11]
 
 def r_int(num): return int(round(num))
 def f_int(num): return int(math.floor(num))
 def index_to_octave(index):
-    note = index % 12
-    octave = f_int(index/12)
+    note = (index + 9) % 12
+    octave = f_int((index + 9)/12)
     return index_to_note[note] + str(octave)
 
 def read_maps(filename):
