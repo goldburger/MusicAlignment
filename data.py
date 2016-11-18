@@ -8,20 +8,12 @@ from collections import namedtuple
 
 Note = namedtuple('Note', ['onset', 'offset', 'index'])
 
-index_to_note = {
-    0: 'A',
-    1: 'A#',
-    2: 'B',
-    3: 'C',
-    4: 'C#',
-    5: 'D',
-    6: 'D#',
-    7: 'E',
-    8: 'F',
-    9: 'F#',
-    10: 'G',
-    11: 'G#'
-}
+index_to_note = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
+
+note_to_index = { n: i for i, n in enumerate(index_to_note) }
+for flat in [('Bb', 1), ('Db', 4), ('Eb', 6), ('Gb', 9), ('Ab', 11)]:
+    note_to_index[flat[0]] = flat[1]
+
 
 def r_int(num): return int(round(num))
 def f_int(num): return int(math.floor(num))
