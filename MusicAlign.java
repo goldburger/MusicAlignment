@@ -1,5 +1,6 @@
 import java.util.Scanner;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.io.File;
 import java.io.FileNotFoundException;
 
@@ -25,16 +26,16 @@ public class MusicAlign {
     }
   }
   
-  public static int[][] sim, v, h, subMatrix;
+  public static double[][] sim, v, h, subMatrix;
   public static Trace[][] vTrace, hTrace, simTrace;
-  public static HashMap<Character, Integer> charMapping;
-  public static String x, y;
+  public static HashMap<String, Integer> stringMapping;
+  public static ArrayList<String> x, y;
   public static String xComment, yComment;
-  public static int gapPenaltyA, gapPenaltyB;
-  public static int minVal;
+  public static double gapPenaltyA, gapPenaltyB;
+  public static double minVal;
   
-  public static int subCost(char i, char j) {
-    return subMatrix[charMapping.get(i)][charMapping.get(j)];
+  public static double subCost(String i, String j) {
+    return subMatrix[stringMapping.get(i)][stringMapping.get(j)];
   }
   
   // Prints one of the 2-dimensional trace arrays, for use in debugging
@@ -47,17 +48,16 @@ public class MusicAlign {
     }
   }
   
-  // Prints one of the 2-dimensional int arrays, for use in debugging
-  public static void printGraph(int[][] g) {
-    for (int[] row : g) {
+  // Prints one of the 2-dimensional value arrays, for use in debugging
+  public static void printGraph(double[][] g) {
+    for (double[] row : g) {
       String line = "";
-      for (int cell : row)
+      for (double cell : row)
         line += cell + " ";
       System.out.println("[ " + line + "]");
     }
   }
   
-  // Sets sequence to be a string read from filename
   // Assumes FASTA file input with only one string in file
   // First line must be a comment line opening with '>'
   // Returns a string array where first entry is sequence, second is comment
@@ -84,6 +84,21 @@ public class MusicAlign {
     return seqPair;
   }
   
+  // Breaks up argument string into list of tokens, each corresponding to a note
+  public static ArrayList<String> tokenize(String str) {
+    ArrayList<String> tokens = new ArrayList<String>();
+    for (int i = 0; i < str.length(); i += 2) {
+      if (str.charAt(i+1) == '#') {
+        tokens.add(str.substring(i, i+3));
+        i++;
+      }
+      else {
+        tokens.add(str.substring(i, i+2));
+      }
+    }
+    return tokens;
+  }
+
   // First line of file should be space-separated list of characters in alphabet
   // Remaining lines should be space-separated matrix, where nth row and column represent nth alphabet char
   public static void readSubMatrix(String filename){
@@ -96,15 +111,15 @@ public class MusicAlign {
     try {
       s = new Scanner(file);
       String[] alphabet = s.nextLine().split(" ");
-      charMapping = new HashMap<Character, Integer>();
+      stringMapping = new HashMap<String, Integer>();
       for (int i = 0; i < alphabet.length; i++){
-        charMapping.put(alphabet[i].charAt(0), i);
+        stringMapping.put(alphabet[i], i);
       }
-      subMatrix = new int[alphabet.length][alphabet.length];
+      subMatrix = new double[alphabet.length][alphabet.length];
       for (int i = 0; i < alphabet.length; i++) {
         String [] row = s.nextLine().split(" ");
         for (int j = 0; j < alphabet.length; j++) {
-          subMatrix[i][j] = Integer.parseInt(row[j]);
+          subMatrix[i][j] = Double.parseDouble(row[j]);
         }
       }
     } catch (FileNotFoundException e) {
@@ -130,22 +145,22 @@ public class MusicAlign {
     }
 
     String[] pair = readString(args[0]);
-    x = pair[0];
+    x = tokenize(pair[0]);
     xComment = pair[1];
     pair = readString(args[1]);
-    y = pair[0];
+    y = tokenize(pair[0]);
     yComment = pair[1];
 
     readSubMatrix(args[2]);
-    gapPenaltyA = Integer.parseInt(args[3]);
-    gapPenaltyB = Integer.parseInt(args[4]);
+    gapPenaltyA = Double.parseDouble(args[3]);
+    gapPenaltyB = Double.parseDouble(args[4]);
     minVal = Integer.MIN_VALUE + gapPenaltyA + gapPenaltyB + 1;
 
-    int m = x.length();
-    int n = y.length();
-    h = new int[m+1][n+1];
-    v = new int[m+1][n+1];
-    sim = new int[m+1][n+1];
+    int m = x.size();
+    int n = y.size();
+    h = new double[m+1][n+1];
+    v = new double[m+1][n+1];
+    sim = new double[m+1][n+1];
     hTrace = new Trace[m+1][n+1];
     vTrace = new Trace[m+1][n+1];
     simTrace = new Trace[m+1][n+1];
@@ -159,7 +174,7 @@ public class MusicAlign {
 
     // Calculate first row
     for (int i = 1; i <= n; i++) {
-      h[0][i] = -1 * (gapPenaltyA + (i-1)*gapPenaltyB);
+      h[0][i] = -1 * (gapPenaltyA + i*gapPenaltyB);
       hTrace[0][i] = (i == 1) ? Trace.SLEFT : Trace.LEFT;
       v[0][i] = minVal;
       vTrace[0][i] = Trace.NONE;
@@ -179,32 +194,32 @@ public class MusicAlign {
     for (int i = 1; i <= m; i++) {
       for (int j = 1; j <= n; j++) {
         // Set H cell
-        if (h[i][j-1] - gapPenaltyB > sim[i][j-1] - gapPenaltyA) {
+        if (h[i][j-1] > sim[i][j-1] - gapPenaltyA) {
           h[i][j] = h[i][j-1] - gapPenaltyB;
           hTrace[i][j] = Trace.LEFT;
         }
         else {
-          h[i][j] = sim[i][j-1] - gapPenaltyA;
+          h[i][j] = sim[i][j-1] - gapPenaltyA - gapPenaltyB;
           hTrace[i][j] = Trace.SLEFT;
         }
         // Set V cell
-        if (v[i-1][j] - gapPenaltyB > sim[i-1][j] - gapPenaltyA) {
+        if (v[i-1][j] > sim[i-1][j] - gapPenaltyA) {
           v[i][j] = v[i-1][j] - gapPenaltyB;
           vTrace[i][j] = Trace.UP;
         }
         else {
-          v[i][j] = sim[i-1][j] - gapPenaltyA;
+          v[i][j] = sim[i-1][j] - gapPenaltyA - gapPenaltyB;
           vTrace[i][j] = Trace.SUP;
         }
         // Set Sim cell
-        int max = h[i][j];
-        simTrace[i][j] = Trace.H;        
+        double max = h[i][j];
+        simTrace[i][j] = Trace.H;
         if (v[i][j] > max) {
           max = v[i][j];
           simTrace[i][j] = Trace.V;
         }
-        if (sim[i-1][j-1] + subCost(x.charAt(i-1), y.charAt(j-1)) > max) {
-          max = sim[i-1][j-1] + subCost(x.charAt(i-1), y.charAt(j-1));
+        if (sim[i-1][j-1] + subCost(x.get(i-1), y.get(j-1)) > max) {
+          max = sim[i-1][j-1] + subCost(x.get(i-1), y.get(j-1));
           simTrace[i][j] = Trace.DIAG;
         }
         sim[i][j] = max;
@@ -216,35 +231,57 @@ public class MusicAlign {
     int j = n;
     String alignX = "";
     String alignY = "";
-    while (simTrace[i][j] != Trace.NONE) {
-      switch (simTrace[i][j])
+    Trace traceLoc = simTrace[i][j];
+    while (traceLoc != Trace.NONE) {
+      switch (traceLoc)
       {
-        case V:
-          alignX = x.charAt(i-1) + alignX;
-          alignY = "-" + alignY;
+        case SUP:
+          alignX = x.get(i-1) + alignX;
+          alignY = ((x.get(i-1).length() == 3) ? "---" : "--") + alignY;
           i--;
+          traceLoc = simTrace[i][j];
+          break;
+        case UP:
+          alignX = x.get(i-1) + alignX;
+          alignY = ((x.get(i-1).length() == 3) ? "---" : "--") + alignY;
+          i--;
+          traceLoc = vTrace[i][j];
+          break;
+        case SLEFT:
+          alignX = ((y.get(i-1).length() == 3) ? "---" : "--") + alignX;
+          alignY = y.get(j-1) + alignY;
+          j--;
+          traceLoc = simTrace[i][j];
+          break;
+        case LEFT:
+          alignX = ((y.get(i-1).length() == 3) ? "---" : "--") + alignX;
+          alignY = y.get(j-1) + alignY;
+          j--;
+          traceLoc = hTrace[i][j];
           break;
         case H:
-          alignX = "-" + alignX;
-          alignY = y.charAt(j-1) + alignY;
-          j--;
+          traceLoc = hTrace[i][j];
+          break;
+        case V:
+          traceLoc = vTrace[i][j];
           break;
         case DIAG:
-          alignX = x.charAt(i-1) + alignX;
-          alignY = y.charAt(j-1) + alignY;
+          String xPadding = (x.get(i-1).length() < y.get(i-1).length()) ? "-" : "";
+          String yPadding = (y.get(i-1).length() < x.get(i-1).length()) ? "-" : "";
+          alignX = x.get(i-1) + xPadding + alignX;
+          alignY = y.get(j-1) + yPadding + alignY;
           i--;
           j--;
+          traceLoc = simTrace[i][j];
           break;
         case NONE:
         default:
           break;
       }
     }
-    
+
     System.out.println(sim[m][n]);
     System.out.println(alignX);
     System.out.println(alignY);
-    //printTrace(simTrace);
-    //printGraph(sim);
   }
 }
