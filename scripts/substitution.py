@@ -24,7 +24,7 @@ def range_around(index):
     return centered
 
 if __name__ == '__main__':
-    distribution = np.atleast_2d(np.loadtxt('distribution.csv'))
+    distribution = np.atleast_2d(np.loadtxt('matrices/distribution.csv'))
     M, S = np.zeros((88, 88)), np.zeros((88, 88))
 
     for i in range(88):
@@ -34,5 +34,5 @@ if __name__ == '__main__':
     S = S.astype('int32')
     S[S<-10] = -10
 
-    write_substitution_matrix('gaussian.txt', S)
-    write_substitution_matrix('identity.txt', np.identity(88, dtype='int32'))
+    write_substitution_matrix('matrices/gaussian.txt', S)
+    write_substitution_matrix('matrices/identity.txt', np.identity(88, dtype='int32'))

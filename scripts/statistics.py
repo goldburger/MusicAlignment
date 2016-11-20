@@ -27,4 +27,4 @@ if __name__ == '__main__':
 
     normalized = distribution / np.sum(distribution)
 
-    np.savetxt('distribution.csv', normalized, delimiter=' ')
+    np.savetxt('matrices/distribution.csv', normalized, delimiter=' ')
