@@ -265,8 +265,8 @@ public class MusicAlign {
           traceLoc = vTrace[i][j];
           break;
         case DIAG:
-          String xPadding = (x.get(i-1).length() < y.get(i-1).length()) ? "-" : "";
-          String yPadding = (y.get(i-1).length() < x.get(i-1).length()) ? "-" : "";
+          String xPadding = (x.get(i-1).length() < y.get(i-1).length()) ? "_" : "";
+          String yPadding = (y.get(i-1).length() < x.get(i-1).length()) ? "_" : "";
           alignX = x.get(i-1) + xPadding + alignX;
           alignY = y.get(j-1) + yPadding + alignY;
           i--;
