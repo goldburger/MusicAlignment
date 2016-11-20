@@ -14,5 +14,5 @@ for link in soup:
         midi_req = urllib.request.urlopen(mididatabase + link['href'])
         filename = link['href'].split('/')[-1]
 
-        with open('data/midi/{0}'.format(filename), 'wb') as f:
+        with open('data/train/{0}'.format(filename), 'wb') as f:
             f.write(midi_req.read())

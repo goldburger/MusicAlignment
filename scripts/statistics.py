@@ -7,7 +7,7 @@ from data import *
 if __name__ == '__main__':
     distribution = np.zeros((88,))
 
-    for f in glob.glob('data/midi/*.mid'):
+    for f in glob.glob('data/train/*.mid'):
         try:
             notes = read_midi(f)
             onsets = onset_seq(notes)
