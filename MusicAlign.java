@@ -150,11 +150,9 @@ public class MusicAlign {
     pair = readString(args[1]);
     y = tokenize(pair[0]);
     yComment = pair[1];
-
     readSubMatrix(args[2]);
     gapPenaltyA = Double.parseDouble(args[3]);
     gapPenaltyB = Double.parseDouble(args[4]);
-    minVal = Integer.MIN_VALUE + gapPenaltyA + gapPenaltyB + 1;
 
     int m = x.size();
     int n = y.size();
@@ -165,6 +163,7 @@ public class MusicAlign {
     vTrace = new Trace[m+1][n+1];
     simTrace = new Trace[m+1][n+1];
     
+    minVal = Integer.MIN_VALUE + gapPenaltyA + gapPenaltyB + 1;
     h[0][0] = minVal;
     v[0][0] = minVal;
     sim[0][0] = 0;
