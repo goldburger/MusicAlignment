@@ -247,13 +247,13 @@ public class MusicAlign {
           traceLoc = vTrace[i][j];
           break;
         case SLEFT:
-          alignX = ((y.get(i-1).length() == 3) ? "---" : "--") + alignX;
+          alignX = ((y.get(j-1).length() == 3) ? "---" : "--") + alignX;
           alignY = y.get(j-1) + alignY;
           j--;
           traceLoc = simTrace[i][j];
           break;
         case LEFT:
-          alignX = ((y.get(i-1).length() == 3) ? "---" : "--") + alignX;
+          alignX = ((y.get(j-1).length() == 3) ? "---" : "--") + alignX;
           alignY = y.get(j-1) + alignY;
           j--;
           traceLoc = hTrace[i][j];
