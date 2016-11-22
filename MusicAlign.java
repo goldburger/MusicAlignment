@@ -11,7 +11,7 @@ public class MusicAlign {
   // A cell in V will be either SUP or UP, corresponding to the upper cell in Sim or in V, respectively
   // A cell in Sim will be H, V, or D for being based on H cell, V cell, or diagonal up cell in Sim
   public enum Trace { SLEFT, LEFT, SUP, UP, H, V, DIAG, NONE }
-  
+
   public static String getString(MusicAlign.Trace t) {
     switch (t) {
       case SLEFT: return "LS";
@@ -25,7 +25,7 @@ public class MusicAlign {
       default: return "  ";
     }
   }
-  
+
   public static double[][] sim, v, h, subMatrix;
   public static Trace[][] vTrace, hTrace, simTrace;
   public static HashMap<String, Integer> stringMapping;
@@ -33,11 +33,11 @@ public class MusicAlign {
   public static String xComment, yComment;
   public static double gapPenaltyA, gapPenaltyB;
   public static double minVal;
-  
+
   public static double subCost(String i, String j) {
     return subMatrix[stringMapping.get(i)][stringMapping.get(j)];
   }
-  
+
   // Prints one of the 2-dimensional trace arrays, for use in debugging
   public static void printTrace(Trace[][] traceArr) {
     for (Trace[] tr : traceArr) {
@@ -47,7 +47,7 @@ public class MusicAlign {
       System.out.println("[ " + line + "]");
     }
   }
-  
+
   // Prints one of the 2-dimensional value arrays, for use in debugging
   public static void printGraph(double[][] g) {
     for (double[] row : g) {
@@ -57,7 +57,7 @@ public class MusicAlign {
       System.out.println("[ " + line + "]");
     }
   }
-  
+
   // Assumes FASTA file input with only one string in file
   // First line must be a comment line opening with '>'
   // Returns a string array where first entry is sequence, second is comment
@@ -83,7 +83,7 @@ public class MusicAlign {
     }
     return seqPair;
   }
-  
+
   // Breaks up argument string into list of tokens, each corresponding to a note
   public static ArrayList<String> tokenize(String str) {
     ArrayList<String> tokens = new ArrayList<String>();
@@ -128,7 +128,7 @@ public class MusicAlign {
       s.close();
     }
   }
-  
+
   // Currently costs A + (k-1)B for gap of k
   // This differs from the Gotoh algorithm! Change to other convention?
   public static void main(String [] args) {
@@ -162,7 +162,7 @@ public class MusicAlign {
     hTrace = new Trace[m+1][n+1];
     vTrace = new Trace[m+1][n+1];
     simTrace = new Trace[m+1][n+1];
-    
+
     minVal = Integer.MIN_VALUE + gapPenaltyA + gapPenaltyB + 1;
     h[0][0] = minVal;
     v[0][0] = minVal;
@@ -224,7 +224,7 @@ public class MusicAlign {
         sim[i][j] = max;
       }
     }
-    
+
     // Probably does traceback wrong, likely needs correction based on Altschul's fix for Gotoh's traceback
     int i = m;
     int j = n;
@@ -265,8 +265,8 @@ public class MusicAlign {
           traceLoc = vTrace[i][j];
           break;
         case DIAG:
-          String xPadding = (x.get(i-1).length() < y.get(i-1).length()) ? "_" : "";
-          String yPadding = (y.get(i-1).length() < x.get(i-1).length()) ? "_" : "";
+          String xPadding = (x.get(i-1).length() < y.get(j-1).length()) ? "_" : "";
+          String yPadding = (y.get(j-1).length() < x.get(i-1).length()) ? "_" : "";
           alignX = x.get(i-1) + xPadding + alignX;
           alignY = y.get(j-1) + yPadding + alignY;
           i--;
