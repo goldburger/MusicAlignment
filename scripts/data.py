@@ -15,8 +15,11 @@ index_to_note = [
 ]
 
 def note_to_index(note):
+    # if it's just a skip
+    if note == '-': return -1
+    # else, remove all dashes
     note = re.sub('\-', '', note)
-
+    # and get information
     note_dict = { n: i for i, n in enumerate(index_to_note) }
     for flat in [('Bb', 1), ('Db', 4), ('Eb', 6), ('Gb', 9), ('Ab', 11)]:
         note_dict[flat[0]] = flat[1]

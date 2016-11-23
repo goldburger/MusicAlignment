@@ -1,3 +1,30 @@
+var notes = 'CDEFGAB';
+
+var noteToIndex = function(note) {
+  if(note === '-') { return null; }
+
+  i = notes.indexOf(note[0]);
+  o = parseInt(note.slice(-1));
+
+  return o*7+i;
+}
+
+var accidentals = function(note) {
+  if(note.length < 3) { return null; }
+  return note[1];
+}
+
+var zip_to_dict = function(sequence) {
+  ns = [];
+  for(i = 0; i < sequence.length; i++) {
+    ns.push({
+      'ix': noteToIndex(sequence[i]),
+      'acc': accidentals(sequence[i])
+    });
+  }
+  return ns;
+}
+
 var vis = d3.select('#notes')
     .append('svg');
 var w = 900,
@@ -19,17 +46,14 @@ vis.selectAll('.staff')
     .attr('y2', function(d) { return d.y; })
     .style('stroke', 'rgb(10, 10, 10)');
 
-var notes = [{ 'n1': -1, 'n2': 5 },
-	     { 'n1': -1, 'n2': 4 },
-	     { 'n1': 3, 'n2': 3 },
-	     { 'n1': 2, 'n2': 2 },
-	     { 'n1': 1, 'n2': -1 }];
+var s1 = zip_to_dict(['C4', 'D4', 'E4', 'F4', '-']);
+var s2 = zip_to_dict(['-', '-', 'E4', 'F4', 'G4']);
 
 vis.selectAll('.notes')
-    .data(notes)
+    .data(s1)
     .enter()
     .append('circle')
     .attr('cx', function(d, i) { return i*30+30; })
-    .attr('cy', function(d) { if(d.n2 >= 0) { return 100 - d.n2 * 10; } else { return -1000; } })
+    .attr('cy', function(d) { if(d.ix !== null) { return 100 - d.ix; } else { return -1000; } })
     .attr('r', '10px')
     .attr('fill', 'rgba(10, 10, 10)');
