@@ -51,10 +51,20 @@ def read_maps(filename):
 def read_midi(filename):
     notes = []
     current_time = 0.
-    for msg in MidiFile(filename):
-        if msg.type == 'note_on':
+    mid = MidiFile(filename)
+    max_track, max_len = 0, 0
+    # get the track with the longest length
+    for i, track in enumerate(mid.tracks):
+        if len(track) > max_len:
+            max_track = i
+            max_len = len(track)
+    # get all the messages in the longest track
+    for msg in mid.tracks[max_track]:
+        if msg.type == 'note_on' and msg.velocity > 0:
             notes.append(Note(current_time+msg.time, 0, int(msg.note)-21))
-        if msg.type == 'note_off':
+        # MuseScore has a weird thing where they don't use 'note_off'
+        # but just a 'note_on' with a velocity of 0
+        if msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
             for i, note in enumerate(reversed(notes)):
                 if note.index != msg.note - 21:
                     continue

@@ -1,59 +1,56 @@
-var notes = 'CDEFGAB';
+var svg = d3.select('#notes').append('svg');
 
-var noteToIndex = function(note) {
-  if(note === '-') { return null; }
+d3.json("./output.json", function(root) {
+  update(root.s1, root.s2);
+});
 
-  i = notes.indexOf(note[0]);
-  o = parseInt(note.slice(-1));
+var update = function(s1, s2) {
+  var staff = [0, 1, 2, 3, 4, 6, 7, 8, 9, 10].map(
+    function(d) {
+      return { 'y': 200 + (d+1)*20 };
+    }
+  );
 
-  return o*7+i;
-}
+  var w = 10 + (s1.length + 1) * 30,
+      h = 560;
 
-var accidentals = function(note) {
-  if(note.length < 3) { return null; }
-  return note[1];
-}
+  svg.attr('width', w).attr('height', h);
 
-var zip_to_dict = function(sequence) {
-  ns = [];
-  for(i = 0; i < sequence.length; i++) {
-    ns.push({
-      'ix': noteToIndex(sequence[i]),
-      'acc': accidentals(sequence[i])
-    });
-  }
-  return ns;
-}
+  var staff = svg.selectAll('.staff')
+      .data(staff)
+    .enter().append('line')
+      .attr('x1', function(d) { return 10; })
+      .attr('x2', function(d) { return w - 20; })
+      .attr('y1', function(d) { return d.y; })
+      .attr('y2', function(d) { return d.y; })
+      .style('stroke', '#444444');
 
-var vis = d3.select('#notes')
-    .append('svg');
-var w = 900,
-    h = 400;
+  var firstSequence = svg.selectAll('.notes')
+      .data(s1)
+    .enter().append('circle')
+      .attr('cx', function(d, i) { return i * 30 + 30; });
 
-vis.attr('width', w)
-    .attr('height', h);
+  var correct = firstSequence
+    .filter(function(d, i) { return (d.ix === s2[i].ix) && (d.acc === s2[i].acc) })
+      .attr('cy', function(d) { return 600-d.ix * 10; })
+      .attr('r', '10px')
+      .attr('fill', 'green')
+      .style('opacity', 0.8);
 
-var staff = [0, 1, 2, 3, 4];
-var staff = staff.map(function(d) { return { 'y': (d+1)*20 }; })
+  var firstSequenceIncorrect = firstSequence
+    .filter(function(d, i) { return (d.ix !== s2[i].ix) || (d.acc !== s2[i].acc) })
+      .attr('cy', function(d) { if (d.ix !== null) { return 600-d.ix * 10; } else { return 10000;  } })
+      .attr('r', '10px')
+      .attr('fill', 'blue')
+      .style('opacity', 0.8);
 
-vis.selectAll('.staff')
-    .data(staff)
-    .enter()
-    .append('line')
-    .attr('x1', function(d) { return  10; })
-    .attr('x2', function(d) { return 410; })
-    .attr('y1', function(d) { return d.y; })
-    .attr('y2', function(d) { return d.y; })
-    .style('stroke', 'rgb(10, 10, 10)');
-
-var s1 = zip_to_dict(['C4', 'D4', 'E4', 'F4', '-']);
-var s2 = zip_to_dict(['-', '-', 'E4', 'F4', 'G4']);
-
-vis.selectAll('.notes')
-    .data(s1)
-    .enter()
-    .append('circle')
-    .attr('cx', function(d, i) { return i*30+30; })
-    .attr('cy', function(d) { if(d.ix !== null) { return 100 - d.ix; } else { return -1000; } })
+  var secondSequenceIncorrect = svg.selectAll('.s2-incorrect')
+      .data(s2)
+    .enter().append('circle')
+      .attr('cx', function(d, i) { return i * 30 + 30; })
+    .filter(function(d, i) { return (d.ix !== s1[i].ix) || (d.acc !== s1[i].acc) })
+    .attr('cy', function(d) { if (d.ix !== null) { return 600-d.ix * 10; } else { return 10000;  } })
     .attr('r', '10px')
-    .attr('fill', 'rgba(10, 10, 10)');
+    .attr('fill', 'red')
+    .style('opacity', 0.8);
+}

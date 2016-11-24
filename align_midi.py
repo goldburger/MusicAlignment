@@ -2,6 +2,7 @@ import argparse
 import os
 
 from scripts.data import read_midi, onset_seq, output_fasta
+from scripts.to_json import to_json
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -16,4 +17,7 @@ if __name__ == '__main__':
     output_fasta(seq1, 'seq1', 'data/fasta/seq1.fasta')
     output_fasta(seq2, 'seq2', 'data/fasta/seq2.fasta')
 
-    os.system('java MusicAlign data/fasta/seq1.fasta data/fasta/seq2.fasta {0} 2 1'.format(args.mat))
+    os.system('java MusicAlign data/fasta/seq1.fasta data/fasta/seq2.fasta {0} 2 1 > {1}'.format(args.mat, 'visualizations/output.txt'))
+
+    with open('visualizations/output.json', 'w') as f:
+        f.write(to_json('visualizations/output.txt'))

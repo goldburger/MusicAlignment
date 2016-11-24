@@ -1,5 +1,3 @@
-from data import note_to_index
-
 import argparse
 import json
 import re
@@ -12,16 +10,25 @@ def remove_dashes(n):
         return n[0]
     return n
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input', '-i', dest='input', required=True)
-    parser.add_argument('--output', '-o', dest='output', required=True)
-    args = parser.parse_args()
+notes = {
+    'C': 0, 'D': 1, 'E': 2, 'F': 3, 'G': 4, 'A': 5, 'B': 6
+}
 
+def to_js_index(note):
+    if note == '-':
+        return None
+    return int(note[-1]) * 7 + notes[note[0]]
+
+def accidentals(note):
+    if len(note) < 3:
+        return None
+    return note[1]
+
+def to_json(filename):
     seq1 = []
     seq2 = []
 
-    with open(args.input, 'r') as f:
+    with open(filename, 'r') as f:
         _, a1, a2 = f.read().strip().split()
         note1, note2 = '', ''
         for i in range(len(a1.rstrip())):
@@ -34,5 +41,7 @@ if __name__ == '__main__':
                 seq1.append(note1) ; seq2.append(note2)
                 note1, note2 = '', ''
 
-    with open(args.output, 'w') as f:
-        f.write(json.dumps({'s1': seq1, 's2': seq2}))
+    seq1 = [{'ix': to_js_index(note), 'acc': accidentals(note)} for note in seq1]
+    seq2 = [{'ix': to_js_index(note), 'acc': accidentals(note)} for note in seq2]
+
+    return json.dumps({'s1': seq1, 's2': seq2})
