@@ -1,0 +1,31 @@
+svg {
+  fill: none;
+}
+
+circle {
+  r: 7px;
+  opacity: 0.75;
+  stroke-opacity: 0.5;
+  stroke-width: 5px;
+}
+
+circle:hover {
+  opacity: 1.0;
+  stroke-opacity: 0.75;
+}
+
+.correct {
+  fill: #105B63;
+  stroke: #105B63;
+}
+
+.incorrect {
+  fill: #BD4932;
+  stroke: #BD4932;
+}
+
+.incorrect-background {
+  r: 4px;
+  fill: #CCA32E;
+  stroke: #CCA32E;
+}
