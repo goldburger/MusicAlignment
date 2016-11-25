@@ -1,17 +1,34 @@
+#notes {
+  overflow-x: scroll;
+}
+
 svg {
   fill: none;
 }
 
+line {
+  stroke-width: 2px;
+  stroke: #BBB;
+}
+
 circle {
-  r: 7px;
+  r: 9px;
   opacity: 0.75;
   stroke-opacity: 0.5;
   stroke-width: 5px;
+  transition: all .2s ease-in-out;
 }
 
 circle:hover {
   opacity: 1.0;
   stroke-opacity: 0.75;
+  r: 12px;
+  cursor: pointer;
+}
+
+text {
+  font-size: 15px;
+  font-family: sans-serif;
 }
 
 .correct {
@@ -25,7 +42,7 @@ circle:hover {
 }
 
 .incorrect-background {
-  r: 4px;
+  r: 7px;
   fill: #CCA32E;
   stroke: #CCA32E;
 }
