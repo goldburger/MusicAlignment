@@ -45,6 +45,12 @@ var update = function(s1, s2) {
   var s2Data = svg.selectAll('.s2')
       .data(s2).enter();
 
+  var s2Lines = s2Data
+      .append('line').attr('x1', function(d, i) { return getXPos(d, i) - 14; })
+      .attr('x2', function(d, i) { return getXPos(d, i) + 14; })
+      .attr('y1', function(d) { if(d.ix % 2 == 0) { return getYPos(d); } else { return 10000; } })
+      .attr('y2', function(d) { if(d.ix % 2 == 0) { return getYPos(d); } else { return 10000; } });
+
   var s2Notes = s2Data
       .append('circle')
       .attr('cx', getXPos);
@@ -64,6 +70,12 @@ var update = function(s1, s2) {
 
   var s1Data = svg.selectAll('.s1')
       .data(s1).enter();
+
+  var s1Lines = s1Data
+      .append('line').attr('x1', function(d, i) { return getXPos(d, i) - 14; })
+      .attr('x2', function(d, i) { return getXPos(d, i) + 14; })
+      .attr('y1', function(d) { if(d.ix % 2 == 0) { return getYPos(d); } else { return 10000; } })
+      .attr('y2', function(d) { if(d.ix % 2 == 0) { return getYPos(d); } else { return 10000; } });
 
   var s1Notes = s1Data
       .append('circle')
