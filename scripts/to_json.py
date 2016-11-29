@@ -47,7 +47,7 @@ def to_json(filename):
                     seq_note['ix'] = to_js_index(note1)
                     seq_note['acc'] = accidentals(note1)
                     seq.append(seq_note)
-                if note1 == '-' or (note1 != note2 and note1 != '-'):
+                if note1 == '-' or (note1 != note2 and note2 != '-' and note1 != '-'):
                     seq_note['c'] = 'b'
                     seq_note['ix'] = to_js_index(note2)
                     seq_note['acc'] = accidentals(note2)
