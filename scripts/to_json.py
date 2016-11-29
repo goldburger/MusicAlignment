@@ -47,12 +47,12 @@ def to_json(filename):
                     seq_note['ix'] = to_js_index(note1)
                     seq_note['acc'] = accidentals(note1)
                     seq.append(seq_note)
-                if note1 == '-' or note1 != note2:
+                if note1 == '-' or (note1 != note2 and note1 != '-'):
                     seq_note['c'] = 'b'
                     seq_note['ix'] = to_js_index(note2)
                     seq_note['acc'] = accidentals(note2)
                     seq.append(seq_note)
-                if note2 == '-' or note1 != note2:
+                if note2 == '-' or (note1 != note2 and note2 != '-' and note1 != '-'):
                     seq_note2 = copy.deepcopy(seq_note)
                     seq_note2['c'] = 'i'
                     seq_note2['ix'] = to_js_index(note1)
