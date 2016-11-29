@@ -9,7 +9,7 @@ def write_substitution_matrix(filename, S):
     with open(filename, 'w') as f:
         f.write(' '.join(notes) + '\n')
         for i, note in enumerate(notes):
-            f.write('\t'.join(list(map(str, S[i, :]))) + '\n')
+            f.write(' '.join(list(map(str, S[i, :]))) + '\n')
 
 def gaussian(mu, s):
     return lambda x: 1. / (np.sqrt(2 * np.pi) * s) * \
@@ -28,11 +28,14 @@ if __name__ == '__main__':
     M, S = np.zeros((88, 88)), np.zeros((88, 88))
 
     for i in range(88):
-        M[:, i] = gaussian(0, 2)(range_around(i))
+        M[:, i] = gaussian(0, 10)(range_around(i))
         S[:, i] = np.log(M[:, i] / distribution[0, i])
+        S[i, i] = max(1, S[i, i])
+        exclude = [j for j in range(88) if j != i]
+        S[exclude, i] = S[exclude, i] - S[i, i]
 
-    S = S.astype('int32')
+    #S = S.astype('int32')
     S[S<-10] = -10
 
     write_substitution_matrix('matrices/gaussian.txt', S)
-    write_substitution_matrix('matrices/identity.txt', np.identity(88, dtype='int32'))
+    write_substitution_matrix('matrices/identity.txt', np.identity(88))

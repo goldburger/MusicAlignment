@@ -1,5 +1,6 @@
 import argparse
 import json
+import copy
 import re
 
 starters = re.compile(r'[A-G\-]')
@@ -25,12 +26,13 @@ def accidentals(note):
     return note[1]
 
 def to_json(filename):
-    seq1 = []
-    seq2 = []
+    seq = []
 
     with open(filename, 'r') as f:
         _, a1, a2 = f.read().strip().split()
         note1, note2 = '', ''
+        seq_note = {}
+        count = 0
         for i in range(len(a1.rstrip())):
             if a1[i] != '_':
                 note1 += a1[i]
@@ -38,10 +40,26 @@ def to_json(filename):
                 note2 += a2[i]
             if stoppers.match(a1[i]) and stoppers.match(a2[i]):
                 note1, note2 = remove_dashes(note1), remove_dashes(note2)
-                seq1.append(note1) ; seq2.append(note2)
+                seq_note['t'] = count
+                seq_note['l'] = 1
+                if note1 == note2:
+                    seq_note['c'] = 'c'
+                    seq_note['ix'] = to_js_index(note1)
+                    seq_note['acc'] = accidentals(note1)
+                    seq.append(seq_note)
+                if note1 == '-' or note1 != note2:
+                    seq_note['c'] = 'b'
+                    seq_note['ix'] = to_js_index(note2)
+                    seq_note['acc'] = accidentals(note2)
+                    seq.append(seq_note)
+                if note2 == '-' or note1 != note2:
+                    seq_note2 = copy.deepcopy(seq_note)
+                    seq_note2['c'] = 'i'
+                    seq_note2['ix'] = to_js_index(note1)
+                    seq_note2['acc'] = accidentals(note1)
+                    seq.append(seq_note2)
                 note1, note2 = '', ''
+                seq_note = {}
+                count += 1
 
-    seq1 = [{'ix': to_js_index(note), 'acc': accidentals(note)} for note in seq1]
-    seq2 = [{'ix': to_js_index(note), 'acc': accidentals(note)} for note in seq2]
-
-    return json.dumps({'s1': seq1, 's2': seq2})
+    return json.dumps({'s': seq})

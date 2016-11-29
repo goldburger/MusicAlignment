@@ -5,6 +5,10 @@ d3.json("./output.json", function(root) {
 });
 
 var update = function(s1, s2) {
+  svg.attr('width', 500).attr('height', 560);
+  var stuff = staff();
+
+  /*
   var staff = [0, 1, 2, 3, 4, 6, 7, 8, 9, 10].map(
     function(d) {
       return { 'y': 200 + (d+1)*18 };
@@ -106,6 +110,6 @@ var update = function(s1, s2) {
     .filter(function(d, i) { return getAccidentals(d) && getCorrect(d, i); })
       .attr('y', getYPos)
       .text(function(d, i) { return "#"; })
-      .attr("fill", "#307B83");
+      .attr("fill", "#307B83");*/
 
 }

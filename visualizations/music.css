@@ -7,22 +7,20 @@ svg {
 }
 
 line {
-  stroke-width: 2px;
+  stroke-width: 1.5px;
   stroke: #BBB;
 }
 
-circle {
-  r: 9px;
-  opacity: 0.75;
-  stroke-opacity: 0.5;
+rect {
   stroke-width: 5px;
+  stroke-opacity: 0.5;
+  opacity: 0.75;
   transition: all .2s ease-in-out;
 }
 
-circle:hover {
+rect:hover {
+  stroke-width: 9px;
   opacity: 1.0;
-  stroke-opacity: 0.75;
-  r: 12px;
   cursor: pointer;
 }
 
@@ -31,18 +29,17 @@ text {
   font-family: sans-serif;
 }
 
-.correct {
+.c {
   fill: #105B63;
   stroke: #105B63;
 }
 
-.incorrect {
+.i {
   fill: #BD4932;
   stroke: #BD4932;
 }
 
-.incorrect-background {
-  r: 7px;
+.b {
   fill: #CCA32E;
   stroke: #CCA32E;
 }
