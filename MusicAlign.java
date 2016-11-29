@@ -33,6 +33,7 @@ public class MusicAlign {
   public static String xComment, yComment;
   public static double gapPenaltyA, gapPenaltyB;
   public static double minVal;
+  public static boolean alignGlobal = false;
 
   public static double subCost(String i, String j) {
     return subMatrix[stringMapping.get(i)][stringMapping.get(j)];
@@ -132,14 +133,15 @@ public class MusicAlign {
   // Currently costs A + (k-1)B for gap of k
   // This differs from the Gotoh algorithm! Change to other convention?
   public static void main(String [] args) {
-    if (args.length != 5) {
+    if (args.length != 5 && !(args.length == 6 && args[5].equals("-g"))) {
       String usage = "";
-      usage += "Usage: java MusicAlign <inputX> <inputY> <sub> <A> <B>";
+      usage += "Usage: java MusicAlign <inputX> <inputY> <sub> <A> <B> -g";
       usage += " inputX: file containing first string to align";
       usage += " inputY: file containing second string to align";
       usage += " sub: file containing substitution matrix for alphabet used in input file";
       usage += " A: integer cost for starting term of affine gap penalty";
       usage += " B: integer cost for extending term of affine gap penalty";
+      usage += " -g: optional flag for performing global alignment vs local";
       System.out.println(usage);
       System.exit(1);
     }
@@ -153,6 +155,8 @@ public class MusicAlign {
     readSubMatrix(args[2]);
     gapPenaltyA = Double.parseDouble(args[3]);
     gapPenaltyB = Double.parseDouble(args[4]);
+    if (args.length == 6)
+      alignGlobal = true;
 
     int m = x.size();
     int n = y.size();
@@ -177,8 +181,14 @@ public class MusicAlign {
       hTrace[0][i] = (i == 1) ? Trace.SLEFT : Trace.LEFT;
       v[0][i] = minVal;
       vTrace[0][i] = Trace.NONE;
-      sim[0][i] = h[0][i];
-      simTrace[0][i] = Trace.H;
+      if (alignGlobal) {
+        sim[0][i] = h[0][i];
+        simTrace[0][i] = Trace.H;
+      }
+      else {
+        sim[0][i] = 0;
+        simTrace[0][i] = Trace.NONE;
+      }
     }
     // Calculate first column
     for (int i = 1; i <= m; i++) {
@@ -186,8 +196,14 @@ public class MusicAlign {
       hTrace[i][0] = Trace.NONE;
       v[i][0] = -1 * (gapPenaltyA + (i-1)*gapPenaltyB);
       vTrace[i][0] = (i == 1) ? Trace.SUP : Trace.UP;
-      sim[i][0] = v[i][0];
-      simTrace[i][0] = Trace.V;
+      if (alignGlobal) {
+        sim[i][0] = v[i][0];
+        simTrace[i][0] = Trace.V;
+      }
+      else {
+        sim[i][0] = 0;
+        simTrace[i][0] = Trace.NONE;
+      }
     }
     // Calculate for rest of path graphs
     for (int i = 1; i <= m; i++) {
@@ -221,16 +237,35 @@ public class MusicAlign {
           max = sim[i-1][j-1] + subCost(x.get(i-1), y.get(j-1));
           simTrace[i][j] = Trace.DIAG;
         }
+        if (!alignGlobal) {
+          if (0 >= max) {
+            max = 0;
+            simTrace[i][j] = Trace.NONE;
+          }
+        }
         sim[i][j] = max;
       }
     }
 
-    // Probably does traceback wrong, likely needs correction based on Altschul's fix for Gotoh's traceback
     int i = m;
     int j = n;
     String alignX = "";
     String alignY = "";
     Trace traceLoc = simTrace[i][j];
+    double maxScore = sim[i][j];
+    if (!alignGlobal) {
+      maxScore = minVal;
+      for (int row = 0; row <= m; row++) {
+        for (int col = 0; col <= n; col++) {
+          if (sim[row][col] > maxScore) {
+            maxScore = sim[row][col];
+            traceLoc = simTrace[row][col];
+            i = row;
+            j = col;
+          }
+        }
+      }
+    }
     while (traceLoc != Trace.NONE) {
       switch (traceLoc)
       {
@@ -279,7 +314,7 @@ public class MusicAlign {
       }
     }
 
-    System.out.println(sim[m][n]);
+    System.out.println(maxScore);
     System.out.println(alignX);
     System.out.println(alignY);
   }
