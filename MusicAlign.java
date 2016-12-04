@@ -1,3 +1,4 @@
+import java.lang.Math;
 import java.util.Scanner;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -41,7 +42,21 @@ public class MusicAlign {
       return subMatrix[stringMapping.get(i)][stringMapping.get(j)];
     }
     else if (i instanceof ArrayList<?> && j instanceof ArrayList<?>) {
-      return 0.0;
+      double dotProd = 0;
+      double iSum = 0;
+      double jSum = 0;
+      ArrayList<Double> first = (ArrayList<Double>)i;
+      ArrayList<Double> second = (ArrayList<Double>)j;
+      for (int k = 0; k < first.size(); k++) {
+        iSum += Math.pow(first.get(k), 2);
+        jSum += Math.pow(second.get(k), 2);
+        dotProd += first.get(k)*second.get(k);
+      }
+      double denom = (Math.sqrt(iSum) * Math.sqrt(jSum));
+      if (denom == 0)
+        return 0;
+      else
+        return dotProd / denom;
     }
     else
       throw new RuntimeException("Illegal substitution attempted.");
@@ -71,7 +86,7 @@ public class MusicAlign {
   public static String printVector(ArrayList<Double> list) {
     String str = "";
     for (int i = 0; i < list.size()-1; i++) {
-      str += list.get(i).doubleValue() + ", ";
+      str += list.get(i).doubleValue() + ",";
     }
     str += list.get(list.size()-1) + "\n";
     return str;
@@ -205,9 +220,7 @@ public class MusicAlign {
     ArrayList<? extends Object> y;
     if (alignPoly) {
       x = readSeqPoly(args[0]);
-      System.out.println(x.size());
       y = readSeqPoly(args[1]);
-      System.out.println(y.size());
       zeroVector = new ArrayList<Double>();
       for (int i = 0; i < ((ArrayList<?>)x.get(0)).size(); i++)
         zeroVector.add(0.0);
@@ -329,6 +342,7 @@ public class MusicAlign {
       }
     }
     // Write score and alignment to files for polyphonic case
+    // NOTE: CSV FILES ARE WRITTEN IN REVERSE ORDER!!
     if (alignPoly) {
       try {
         Writer xWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("x.csv"), "utf-8"));
@@ -378,6 +392,8 @@ public class MusicAlign {
               break;
           }
         }
+        xWriter.close();
+        yWriter.close();
       }
       catch (Exception e) {
         e.printStackTrace();
