@@ -3,6 +3,10 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.Writer;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
+import java.io.FileOutputStream;
 
 public class MusicAlign {
 
@@ -29,14 +33,18 @@ public class MusicAlign {
   public static double[][] sim, v, h, subMatrix;
   public static Trace[][] vTrace, hTrace, simTrace;
   public static HashMap<String, Integer> stringMapping;
-  public static ArrayList<String> x, y;
-  public static String xComment, yComment;
-  public static double gapPenaltyA, gapPenaltyB;
-  public static double minVal;
-  public static boolean alignGlobal = false;
+  public static ArrayList<Double> zeroVector;
+  public static boolean alignGlobal = false, alignPoly = false;
 
-  public static double subCost(String i, String j) {
-    return subMatrix[stringMapping.get(i)][stringMapping.get(j)];
+  public static double subCost(Object i, Object j) {
+    if (i instanceof String && j instanceof String) {
+      return subMatrix[stringMapping.get(i)][stringMapping.get(j)];
+    }
+    else if (i instanceof ArrayList<?> && j instanceof ArrayList<?>) {
+      return 0.0;
+    }
+    else
+      throw new RuntimeException("Illegal substitution attempted.");
   }
 
   // Prints one of the 2-dimensional trace arrays, for use in debugging
@@ -59,30 +67,57 @@ public class MusicAlign {
     }
   }
 
-  // Assumes FASTA file input with only one string in file
-  // First line must be a comment line opening with '>'
-  // Returns a string array where first entry is sequence, second is comment
-  public static String[] readString(String filename) {
+  // Generates CSV line from list of doubles
+  public static String printVector(ArrayList<Double> list) {
+    String str = "";
+    for (int i = 0; i < list.size()-1; i++) {
+      str += list.get(i).doubleValue() + ", ";
+    }
+    str += list.get(list.size()-1) + "\n";
+    return str;
+  }
+
+  public static Scanner openFile(String filename) {
     File file = new File(filename);
     if (!file.exists() || file.isDirectory()) {
       System.out.println(filename + ": file not found");
       System.exit(1);
     }
     Scanner s = null;
-    String[] seqPair = new String[2];
     try {
       s = new Scanner(file);
-      seqPair[1] = s.nextLine().substring(1);
-      seqPair[0] = "";
-      do
-        seqPair[0] += s.nextLine();
-      while (s.hasNextLine());
     } catch (FileNotFoundException e) {
       e.printStackTrace();
-    } finally {
-      s.close();
     }
-    return seqPair;
+    return s;
+  }
+
+  // Assumes FASTA file input with only one string in file
+  // First line must be a comment line opening with '>'
+  public static ArrayList<String> readSequence(String filename) {
+    Scanner s = openFile(filename);
+    String str = "";
+    s.nextLine();
+    do
+      str += s.nextLine();
+    while (s.hasNextLine());
+    s.close();
+    return tokenize(str);
+  }
+
+  // Assumes file for polyphonic case with one note vector per line
+  public static ArrayList<ArrayList<Double>> readSeqPoly(String filename) {
+    Scanner s = openFile(filename);
+    ArrayList<ArrayList<Double>> poly = new ArrayList<ArrayList<Double>>();
+    while (s.hasNextLine()) {
+      String[] line = s.nextLine().split(",");
+      ArrayList<Double> vector = new ArrayList<Double>();
+      for (String str : line) {
+        vector.add(Double.parseDouble(str));
+      }
+      poly.add(vector);
+    }
+    return poly;
   }
 
   // Breaks up argument string into list of tokens, each corresponding to a note
@@ -130,33 +165,60 @@ public class MusicAlign {
     }
   }
 
+  public static void printUsage() {
+      String usage = "";
+      usage += "Usage: java MusicAlign <inputX> <inputY> <sub> <A> <B> -g -p\n";
+      usage += " inputX: file containing first string to align\n";
+      usage += " inputY: file containing second string to align\n";
+      usage += " sub: file containing substitution matrix for alphabet used in input file\n";
+      usage += " A: integer cost for starting term of affine gap penalty\n";
+      usage += " B: integer cost for extending term of affine gap penalty\n";
+      usage += " -g: optional flag for performing global alignment vs local\n";
+      usage += " -p: optional flag for polyphonic alignment\n";
+      System.out.println(usage);
+      System.exit(1);
+  }
+
   // Currently costs A + (k-1)B for gap of k
   // This differs from the Gotoh algorithm! Change to other convention?
   public static void main(String [] args) {
-    if (args.length != 5 && !(args.length == 6 && args[5].equals("-g"))) {
-      String usage = "";
-      usage += "Usage: java MusicAlign <inputX> <inputY> <sub> <A> <B> -g";
-      usage += " inputX: file containing first string to align";
-      usage += " inputY: file containing second string to align";
-      usage += " sub: file containing substitution matrix for alphabet used in input file";
-      usage += " A: integer cost for starting term of affine gap penalty";
-      usage += " B: integer cost for extending term of affine gap penalty";
-      usage += " -g: optional flag for performing global alignment vs local";
-      System.out.println(usage);
-      System.exit(1);
+    switch (args.length) {
+      case 5:
+        break;
+      case 6:
+        if (!(args[5].equals("-g") || args[5].equals("-p")))
+          printUsage();
+        break;
+      case 7:
+        if (!((args[5].equals("-g") && args[5].equals("-p")) || (args[5].equals("-p") || args[5].equals("-g"))))
+          printUsage();
+        break;
+      default:
+        printUsage();
     }
 
-    String[] pair = readString(args[0]);
-    x = tokenize(pair[0]);
-    xComment = pair[1];
-    pair = readString(args[1]);
-    y = tokenize(pair[0]);
-    yComment = pair[1];
-    readSubMatrix(args[2]);
-    gapPenaltyA = Double.parseDouble(args[3]);
-    gapPenaltyB = Double.parseDouble(args[4]);
-    if (args.length == 6)
+    if ((args.length == 6 && args[5].equals("-g")) || args.length == 7)
       alignGlobal = true;
+    if ((args.length == 6 && args[5].equals("-p")) || args.length == 7)
+      alignPoly = true;
+    ArrayList<? extends Object> x;
+    ArrayList<? extends Object> y;
+    if (alignPoly) {
+      x = readSeqPoly(args[0]);
+      System.out.println(x.size());
+      y = readSeqPoly(args[1]);
+      System.out.println(y.size());
+      zeroVector = new ArrayList<Double>();
+      for (int i = 0; i < ((ArrayList<?>)x.get(0)).size(); i++)
+        zeroVector.add(0.0);
+    }
+    else {
+      x = readSequence(args[0]);
+      y = readSequence(args[1]);
+    }
+    readSubMatrix(args[2]);
+    double gapPenaltyA = Double.parseDouble(args[3]);
+    double gapPenaltyB = Double.parseDouble(args[4]);
 
     int m = x.size();
     int n = y.size();
@@ -167,7 +229,7 @@ public class MusicAlign {
     vTrace = new Trace[m+1][n+1];
     simTrace = new Trace[m+1][n+1];
 
-    minVal = Integer.MIN_VALUE + gapPenaltyA + gapPenaltyB + 1;
+    double minVal = Integer.MIN_VALUE + gapPenaltyA + gapPenaltyB + 1;
     h[0][0] = minVal;
     v[0][0] = minVal;
     sim[0][0] = 0;
@@ -266,56 +328,115 @@ public class MusicAlign {
         }
       }
     }
-    while (traceLoc != Trace.NONE) {
-      switch (traceLoc)
-      {
-        case SUP:
-          alignX = x.get(i-1) + alignX;
-          alignY = ((x.get(i-1).length() == 3) ? "---" : "--") + alignY;
-          i--;
-          traceLoc = simTrace[i][j];
-          break;
-        case UP:
-          alignX = x.get(i-1) + alignX;
-          alignY = ((x.get(i-1).length() == 3) ? "---" : "--") + alignY;
-          i--;
-          traceLoc = vTrace[i][j];
-          break;
-        case SLEFT:
-          alignX = ((y.get(j-1).length() == 3) ? "---" : "--") + alignX;
-          alignY = y.get(j-1) + alignY;
-          j--;
-          traceLoc = simTrace[i][j];
-          break;
-        case LEFT:
-          alignX = ((y.get(j-1).length() == 3) ? "---" : "--") + alignX;
-          alignY = y.get(j-1) + alignY;
-          j--;
-          traceLoc = hTrace[i][j];
-          break;
-        case H:
-          traceLoc = hTrace[i][j];
-          break;
-        case V:
-          traceLoc = vTrace[i][j];
-          break;
-        case DIAG:
-          String xPadding = (x.get(i-1).length() < y.get(j-1).length()) ? "_" : "";
-          String yPadding = (y.get(j-1).length() < x.get(i-1).length()) ? "_" : "";
-          alignX = x.get(i-1) + xPadding + alignX;
-          alignY = y.get(j-1) + yPadding + alignY;
-          i--;
-          j--;
-          traceLoc = simTrace[i][j];
-          break;
-        case NONE:
-        default:
-          break;
+    // Write score and alignment to files for polyphonic case
+    if (alignPoly) {
+      try {
+        Writer xWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("x.csv"), "utf-8"));
+        Writer yWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("y.csv"), "utf-8"));
+        while (traceLoc != Trace.NONE) {
+          switch (traceLoc)
+          {
+            case SUP:
+              xWriter.write(printVector((ArrayList<Double>)x.get(i-1)));
+              yWriter.write(printVector(zeroVector));
+              i--;
+              traceLoc = simTrace[i][j];
+              break;
+            case UP:
+              xWriter.write(printVector((ArrayList<Double>)x.get(i-1)));
+              yWriter.write(printVector(zeroVector));
+              i--;
+              traceLoc = vTrace[i][j];
+              break;
+            case SLEFT:
+              xWriter.write(printVector(zeroVector));
+              yWriter.write(printVector((ArrayList<Double>)y.get(j-1)));
+              j--;
+              traceLoc = simTrace[i][j];
+              break;
+            case LEFT:
+              xWriter.write(printVector(zeroVector));
+              yWriter.write(printVector((ArrayList<Double>)y.get(j-1)));
+              j--;
+              traceLoc = hTrace[i][j];
+              break;
+            case H:
+              traceLoc = hTrace[i][j];
+              break;
+            case V:
+              traceLoc = vTrace[i][j];
+              break;
+            case DIAG:
+              xWriter.write(printVector((ArrayList<Double>)x.get(i-1)));
+              yWriter.write(printVector((ArrayList<Double>)y.get(j-1)));
+              i--;
+              j--;
+              traceLoc = simTrace[i][j];
+              break;
+            case NONE:
+            default:
+              break;
+          }
+        }
+      }
+      catch (Exception e) {
+        e.printStackTrace();
       }
     }
-
-    System.out.println(maxScore);
-    System.out.println(alignX);
-    System.out.println(alignY);
+    // Print out to console score and alignment for monophonic case
+    else {
+      while (traceLoc != Trace.NONE) {
+        switch (traceLoc)
+        {
+          case SUP:
+            alignX = x.get(i-1) + alignX;
+            alignY = ((((String)x.get(i-1)).length() == 3) ? "---" : "--") + alignY;
+            i--;
+            traceLoc = simTrace[i][j];
+            break;
+          case UP:
+            alignX = x.get(i-1) + alignX;
+            alignY = ((((String)x.get(i-1)).length() == 3) ? "---" : "--") + alignY;
+            i--;
+            traceLoc = vTrace[i][j];
+            break;
+          case SLEFT:
+            alignX = ((((String)y.get(j-1)).length() == 3) ? "---" : "--") + alignX;
+            alignY = y.get(j-1) + alignY;
+            j--;
+            traceLoc = simTrace[i][j];
+            break;
+          case LEFT:
+            alignX = ((((String)y.get(j-1)).length() == 3) ? "---" : "--") + alignX;
+            alignY = y.get(j-1) + alignY;
+            j--;
+            traceLoc = hTrace[i][j];
+            break;
+          case H:
+            traceLoc = hTrace[i][j];
+            break;
+          case V:
+            traceLoc = vTrace[i][j];
+            break;
+          case DIAG:
+            int xLen = ((String)x.get(i-1)).length();
+            int yLen = ((String)y.get(j-1)).length();
+            String xPadding = (xLen < yLen) ? "_" : "";
+            String yPadding = (yLen < xLen) ? "_" : "";
+            alignX = x.get(i-1) + xPadding + alignX;
+            alignY = y.get(j-1) + yPadding + alignY;
+            i--;
+            j--;
+            traceLoc = simTrace[i][j];
+            break;
+          case NONE:
+          default:
+            break;
+        }
+      }
+      System.out.println(maxScore);
+      System.out.println(alignX);
+      System.out.println(alignY);
+    }
   }
 }
