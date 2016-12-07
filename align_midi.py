@@ -17,7 +17,7 @@ if __name__ == '__main__':
     output_fasta(seq1, 'seq1', 'data/fasta/seq1.fasta')
     output_fasta(seq2, 'seq2', 'data/fasta/seq2.fasta')
 
-    os.system('java MusicAlign data/fasta/seq1.fasta data/fasta/seq2.fasta {0} 10 1 > {1}'.format(args.mat, 'visualizations/output.txt'))
+    os.system('java MusicAlign data/fasta/seq1.fasta data/fasta/seq2.fasta {0} 10 1 -g > {1}'.format(args.mat, 'visualizations/output.txt'))
 
     with open('visualizations/output.json', 'w') as f:
         f.write(to_json('visualizations/output.txt'))

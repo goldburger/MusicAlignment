@@ -7,6 +7,10 @@ from mido import MidiFile, tempo2bpm
 from operator import itemgetter
 from collections import namedtuple
 
+from madmom.processors import IOProcessor
+from madmom.features.notes import RNNPianoNoteProcessor, write_midi, write_notes
+from madmom.features.onsets import PeakPickingProcessor
+
 Note = namedtuple('Note', ['onset', 'offset', 'index'])
 
 index_to_note = [
@@ -93,6 +97,20 @@ def onset_seq(notes):
         seq.append(index_to_octave(note.index))
     return seq
 
+def poly_onset_seq(notes):
+    seq = []
+    current_time, current_note = 0, np.zeros(88)
+    for note in notes:
+        if current_time is 0 or np.abs(note.onset - current_time) <= 10:
+            current_note[note.index] = 1
+            current_time = note.onset
+        else:
+            seq.append(current_note)
+            current_note = np.zeros(88)
+            current_note[note.index] = 1
+            current_time = note.onset
+    return np.array(seq)
+
 def seq_to_string(seq):
     output, current_line = '', ''
     for note in seq:
@@ -105,7 +123,6 @@ def seq_to_string(seq):
         output += current_line
     return output
 
-
 def plot_piano_roll(notes):
     roll = piano_roll(notes, 0.05)
     plt.imshow(roll)
@@ -115,8 +132,22 @@ def output_fasta(seq, name, filename):
     with open(filename, 'w') as f:
         f.write('>{0}\n{1}'.format(name, seq_to_string(seq)))
 
+def output_csv(seq, filename):
+    np.savetxt(filename, seq, delimiter=',')
+
+def read_wav(wav_file, output_file):
+    in_processor = RNNPianoNoteProcessor()
+    peak_picking = PeakPickingProcessor(threshold=0.35, smooth=0.09, combine=0.05)
+    #output = write_notes
+    output = write_midi
+    out_processor = [peak_picking, output]
+    processor = IOProcessor(in_processor, out_processor)
+    processor.process(wav_file, output_file)
+
 if __name__ == '__main__':
-    notes = read_midi('data/midi/williams01.mid')
-    output_fasta(onset_seq(notes), 'hedwig', 'hedwig.fasta')
+    test = read_wav('minuet.wav', 'test.mid')
+    notes = read_midi('test.mid')
+    #output_fasta(onset_seq(notes), 'test', 'test.fasta')
+    output_csv(poly_onset_seq(notes), 'test.csv')
     #plot_piano_roll(notes)
     #print(string_seq(notes))
