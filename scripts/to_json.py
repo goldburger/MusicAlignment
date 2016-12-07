@@ -1,7 +1,10 @@
+import numpy as np
 import argparse
 import json
 import copy
 import re
+
+from scripts.data import index_to_octave
 
 starters = re.compile(r'[A-G\-]')
 stoppers = re.compile(r'[0-9\-\_]')
@@ -62,4 +65,31 @@ def to_json(filename):
                 seq_note = {}
                 count += 1
 
+    return json.dumps({'s': seq})
+
+def csv_to_json(csv1, csv2):
+    seq = []
+    s1 = np.loadtxt(open(csv1, 'r'), delimiter=',')
+    s2 = np.loadtxt(open(csv2, 'r'), delimiter=',')
+
+    for i in range(s1.shape[0]):
+        foreground = set(np.where(s1[i, :] > 0)[0].tolist())
+        background = set(np.where(s2[i, :] > 0)[0].tolist())
+
+        _correct = foreground & background
+        fpresent = foreground - background
+        bpresent = background - foreground
+
+        for ix in foreground | background:
+            note = index_to_octave(ix)
+            seq_note = {
+                't': i,
+                'l': 1,
+                'ix': to_js_index(note),
+                'acc': accidentals(note)
+            }
+            if ix in _correct: seq_note['c'] = 'c'
+            if ix in fpresent: seq_note['c'] = 'i'
+            if ix in bpresent: seq_ntoe['c'] = 'b'
+            seq.append(seq_note)
     return json.dumps({'s': seq})
