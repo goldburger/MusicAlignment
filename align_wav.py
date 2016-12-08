@@ -17,7 +17,11 @@ if __name__ == '__main__':
     output_csv(seq1, 'data/fasta/seq1.csv')
     output_csv(seq2, 'data/fasta/seq2.csv')
 
-    os.system('java MusicAlign data/fasta/seq1.csv data/fasta/seq2.csv matrices/gaussian.txt 1 0 -g -p')
+    os.system('java MusicAlign data/fasta/seq1.csv data/fasta/seq2.csv matrices/gaussian.txt 2 1 -p')
+    os.system('tail -r x.csv > data/fasta/x.csv')
+    os.system('tail -r y.csv > data/fasta/y.csv')
 
     with open('visualizations/output.json', 'w') as f:
-        f.write(csv_to_json('x.csv', 'y.csv'))
+        f.write(csv_to_json('data/fasta/x.csv', 'data/fasta/y.csv'))
+
+    os.system('rm x.csv y.csv')

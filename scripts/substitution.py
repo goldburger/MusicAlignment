@@ -32,9 +32,8 @@ if __name__ == '__main__':
         S[:, i] = np.log(M[:, i] / distribution[0, i])
         S[i, i] = max(1, S[i, i])
         exclude = [j for j in range(88) if j != i]
-        S[exclude, i] = S[exclude, i] - S[i, i]
+        S[exclude, i] = S[exclude, i] - S[min(i+3, 87), i]
 
-    #S = S.astype('int32')
     S[S<-10] = -10
 
     write_substitution_matrix('matrices/gaussian.txt', S)

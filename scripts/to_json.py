@@ -90,6 +90,6 @@ def csv_to_json(csv1, csv2):
             }
             if ix in _correct: seq_note['c'] = 'c'
             if ix in fpresent: seq_note['c'] = 'i'
-            if ix in bpresent: seq_ntoe['c'] = 'b'
+            if ix in bpresent: seq_note['c'] = 'b'
             seq.append(seq_note)
     return json.dumps({'s': seq})
